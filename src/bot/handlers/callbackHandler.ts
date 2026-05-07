@@ -9,7 +9,6 @@ import { generatePPTX } from "../../services/pptxService.js";
 import { getProgressMessage } from "../../utils/progressBar.js";
 import { deductBalance } from "../../services/balanceService.js";
 import { mainMenu } from "../keyboards/mainMenu.js";
-import { checkSubscription, getSubscriptionMessage } from "../../utils/subscriptionCheck.js";
 import { handleBroadcastCallback } from "../commands/broadcast.js";
 import fs from "fs";
 import path from "path";
