@@ -4,7 +4,7 @@ import { mainMenu } from "../keyboards/mainMenu.js";
 import { logger } from "../../utils/logger.js";
 import { PRESENTATION_COST, REFERRAL_BONUS, INITIAL_BALANCE } from "../../config/index.js";
 import { formatAmount } from "../../utils/formatter.js";
-import { checkSubscription, getSubscriptionMessage } from "../../utils/subscriptionCheck.js";
+
 
 export default function startCommand(bot: TelegramBot) {
   bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
