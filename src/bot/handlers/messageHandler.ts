@@ -16,7 +16,7 @@ import {
   checkSubscription,
   getSubscriptionMessage,
 } 
-import fs from "fs";
+
 import path from "path";
 
 const BOT_USERNAME = process.env.BOT_USERNAME || "talaba_ai_robot";
