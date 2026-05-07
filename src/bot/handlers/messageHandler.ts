@@ -15,7 +15,7 @@ import { getProgressMessage } from "../../utils/progressBar.js";
 import {
   checkSubscription,
   getSubscriptionMessage,
-} from "../../utils/subscriptionCheck.js";
+} 
 import fs from "fs";
 import path from "path";
 
