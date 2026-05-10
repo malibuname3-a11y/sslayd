@@ -1,21 +1,24 @@
+import os
+from PIL import Image
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
-    MessageHandler,
     CommandHandler,
+    MessageHandler,
     ContextTypes,
     filters,
 )
-from PIL import Image
-import os
 
 TOKEN = os.getenv("BOT_TOKEN")
 
-user_data = {}
+# user state
+user_state = {}
 
+# /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("📸 Rasm yuboring")
 
+# photo handler
 async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
 
@@ -23,55 +26,51 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file = await context.bot.get_file(photo.file_id)
 
     os.makedirs("images", exist_ok=True)
-    input_path = f"images/{user_id}.jpg"
+    path = f"images/{user_id}.jpg"
 
-    await file.download_to_drive(input_path)
+    await file.download_to_drive(path)
 
-    user_data[user_id] = input_path
+    # state saqlash
+    user_state[user_id] = {
+        "path": path
+    }
 
     keyboard = ReplyKeyboardMarkup(
-        [
-            ["📦 Grid (2-10)", "📤 Alohida yuborish"],
-        ],
+        [["📦 Grid (2-10)", "📤 Alohida yuborish"]],
         resize_keyboard=True
     )
 
-    await update.message.reply_text(
-        "Rejimni tanlang:",
-        reply_markup=keyboard
-    )
+    await update.message.reply_text("Rejim tanlang:", reply_markup=keyboard)
 
+# text handler
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     text = update.message.text
 
-    if user_id not in user_data:
+    if user_id not in user_state:
         await update.message.reply_text("Avval rasm yuboring 📸")
         return
 
-    input_path = user_data[user_id]
-    img = Image.open(input_path)
+    data = user_state[user_id]
+    path = data["path"]
+
+    img = Image.open(path)
     w, h = img.size
 
     # 📦 GRID MODE
     if text == "📦 Grid (2-10)":
-        keyboard = ReplyKeyboardMarkup(
-            [[str(i) for i in range(2, 6)],
-             [str(i) for i in range(6, 11)]],
-            resize_keyboard=True
-        )
-        await update.message.reply_text("Nechta nusxa? (2–10)", reply_markup=keyboard)
-        user_data[user_id] = {"mode": "grid", "path": input_path}
+        user_state[user_id]["mode"] = "grid"
+        await update.message.reply_text("Nechta nusxa? (2–10)")
         return
 
-    # 📤 ALohida yuborish
+    # 📤 SINGLE MODE
     if text == "📤 Alohida yuborish":
+        user_state[user_id]["mode"] = "single"
         await update.message.reply_text("Nechta rasm yuboray? (2–10)")
-        user_data[user_id] = {"mode": "single", "path": input_path}
         return
 
     # GRID PROCESS
-    if isinstance(user_data[user_id], dict) and user_data[user_id].get("mode") == "grid":
+    if data.get("mode") == "grid":
         try:
             count = int(text)
         except:
@@ -101,8 +100,8 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_photo(photo=open(out, "rb"))
         return
 
-    # 📤 ALohida yuborish PROCESS
-    if isinstance(user_data[user_id], dict) and user_data[user_id].get("mode") == "single":
+    # SINGLE PROCESS
+    if data.get("mode") == "single":
         try:
             count = int(text)
         except:
@@ -114,10 +113,12 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         for _ in range(count):
-            await update.message.reply_photo(photo=open(input_path, "rb"))
+            await update.message.reply_photo(photo=open(path, "rb"))
 
         return
 
+
+# app
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
@@ -126,4 +127,4 @@ app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
 
 print("Bot ishlayapti...")
 
-app.run_polling()
+app.run_polling(drop_pending_updates=True)
